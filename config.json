@@ -5,9 +5,7 @@
             "args": [
                 "--with",
                 "cubejs-mcp-server",
-                "python",
-                "-m",
-                "cubejs_mcp.server"
+                "cubejs-mcp"
             ],
             "env": {
                 "CUBEJS_API_BASE_URL": "http://localhost:4000/cubejs-api/v1",
