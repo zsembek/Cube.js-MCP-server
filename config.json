@@ -3,7 +3,7 @@
         "cubejs": {
             "command": "uvx",
             "args": [
-                "git+https://github.com/YOUR_USERNAME/cubejs-mcp-server.git"
+                "git+https://github.com/zsembek/Cube.js-MCP-server.git"
             ],
             "env": {
                 "CUBEJS_API_BASE_URL": "http://localhost:4000/cubejs-api/v1",
