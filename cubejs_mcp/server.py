@@ -108,6 +108,49 @@ async def get_meta_resource() -> str:
     data = await make_request("GET", "meta")
     return json.dumps(data, indent=2)
 
+
+@mcp.tool()
+async def get_schema() -> TextContent:
+    """Get the schema representation from Cube.js (GET /schema)."""
+    data = await make_request("GET", "schema")
+    return TextContent(type="text", text=json.dumps(data))
+
+
+@mcp.tool()
+async def refresh(query: Dict[str, Any]) -> TextContent:
+    """Trigger a refresh for the given query (POST /refresh)."""
+    data = await make_request("POST", "refresh", json_data={"query": query})
+    return TextContent(type="text", text=json.dumps(data))
+
+
+@mcp.tool()
+async def refresh_pre_aggregations(payload: Dict[str, Any]) -> TextContent:
+    """Refresh pre-aggregations (POST /pre-aggregations/refresh)."""
+    data = await make_request("POST", "pre-aggregations/refresh", json_data=payload)
+    return TextContent(type="text", text=json.dumps(data))
+
+
+@mcp.tool()
+async def scheduled_refresh(schedule: Dict[str, Any]) -> TextContent:
+    """Trigger scheduled refresh (POST /refresh/schedule or similar)."""
+    data = await make_request("POST", "refresh/schedule", json_data=schedule)
+    return TextContent(type="text", text=json.dumps(data))
+
+
+@mcp.tool()
+async def raw_request(method: str, endpoint: str, params: Optional[Dict] = None, json_data: Optional[Dict] = None) -> TextContent:
+    """
+    Generic request tool to call arbitrary Cube.js REST endpoints.
+
+    method: HTTP method name (GET, POST, PUT, DELETE)
+    endpoint: API endpoint relative to base (e.g. "meta", "load", "sql", "schema")
+    params: query string parameters
+    json_data: JSON body for POST/PUT
+    """
+    method = method.upper()
+    data = await make_request(method, endpoint, params=params, json_data=json_data)
+    return TextContent(type="text", text=json.dumps(data))
+
 def main():
     mcp.run()
 
