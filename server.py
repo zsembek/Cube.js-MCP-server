@@ -97,7 +97,7 @@ async def get_sql(query: Dict[str, Any]) -> TextContent:
     return TextContent(type="text", text=json.dumps(result))
 
 @mcp.tool()
-async def check_health() -> str:
+async def check_health() -> TextContent:
     """
     Checks the health status of the Cube.js server.
     """
@@ -112,10 +112,13 @@ async def check_health() -> str:
         try:
             response = await client.get(url, timeout=5.0)
             if response.status_code == 200:
-                return "OK"
-            return f"Unhealthy: {response.status_code}"
+                status = "OK"
+            else:
+                status = f"Unhealthy: {response.status_code}"
         except Exception as e:
-            return f"Unreachable: {str(e)}"
+            status = f"Unreachable: {str(e)}"
+
+    return TextContent(type="text", text=status)
 
 @mcp.resource("cube://meta")
 async def get_meta_resource() -> str:
