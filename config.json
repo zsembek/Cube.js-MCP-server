@@ -1,0 +1,14 @@
+{
+    "mcpServers": {
+        "cubejs": {
+            "command": "uvx",
+            "args": [
+                "git+https://github.com/YOUR_USERNAME/cubejs-mcp-server.git"
+            ],
+            "env": {
+                "CUBEJS_API_BASE_URL": "http://localhost:4000/cubejs-api/v1",
+                "CUBEJS_API_TOKEN": "your_api_token"
+            }
+        }
+    }
+}

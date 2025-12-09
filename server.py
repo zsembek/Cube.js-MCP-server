@@ -1,0 +1,131 @@
+import os
+import httpx
+from fastmcp import FastMCP, Context
+from typing import Optional, Dict, Any, List
+import json
+
+# Initialize FastMCP server
+mcp = FastMCP("cubejs")
+
+# Configuration
+CUBEJS_API_BASE_URL = os.getenv("CUBEJS_API_BASE_URL", "http://localhost:4000/cubejs-api/v1")
+CUBEJS_API_TOKEN = os.getenv("CUBEJS_API_TOKEN", "")
+
+def get_headers() -> Dict[str, str]:
+    """Get headers for Cube.js API requests."""
+    headers = {"Content-Type": "application/json"}
+    if CUBEJS_API_TOKEN:
+        headers["Authorization"] = CUBEJS_API_TOKEN
+    return headers
+
+async def make_request(method: str, endpoint: str, params: Optional[Dict] = None, json_data: Optional[Dict] = None) -> Dict[str, Any]:
+    """Helper to make async requests to Cube.js API."""
+    url = f"{CUBEJS_API_BASE_URL.rstrip('/')}/{endpoint.lstrip('/')}"
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.request(
+                method=method,
+                url=url,
+                headers=get_headers(),
+                params=params,
+                json=json_data,
+                timeout=30.0
+            )
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            # Try to return the error message from Cube.js if available
+            try:
+                error_data = e.response.json()
+                return {"error": error_data.get("error", str(e))}
+            except:
+                raise RuntimeError(f"API Request failed: {str(e)}")
+        except Exception as e:
+            raise RuntimeError(f"Request failed: {str(e)}")
+
+@mcp.tool()
+async def list_cubes() -> Dict[str, Any]:
+    """
+    Retrieves the list of available cubes, including their measures, dimensions, and segments.
+    Returns the full metadata object from Cube.js.
+    """
+    return await make_request("GET", "meta")
+
+@mcp.tool()
+async def execute_query(query: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Executes a query against the Cube.js API and returns the results.
+    
+    Args:
+        query: The Cube.js query object (JSON). Example:
+               {
+                 "measures": ["Stories.count"],
+                 "dimensions": ["Stories.category"],
+                 "timeDimensions": [{
+                   "dimension": "Stories.time",
+                   "dateRange": ["2015-01-01", "2015-12-31"],
+                   "granularity": "month"
+                 }]
+               }
+    """
+    return await make_request("GET", "load", params={"query": json.dumps(query)}) 
+    # Note: complex queries might need POST /load if too long, but GET is standard for simple ones.
+    # Ideally we should use POST for safety with large JSONs.
+    # Let's switch to POST /load which is supported and safer for JSON payloads.
+    # return await make_request("POST", "load", json_data={"query": query})
+
+@mcp.tool()
+async def execute_query_post(query: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Executes a query against the Cube.js API using POST method (recommended for complex queries).
+    
+    Args:
+        query: The Cube.js query object.
+    """
+    return await make_request("POST", "load", json_data={"query": query})
+
+@mcp.tool()
+async def get_sql(query: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Returns the generated SQL for a given query without executing it.
+    
+    Args:
+        query: The Cube.js query object.
+    """
+    return await make_request("GET", "sql", params={"query": json.dumps(query)})
+
+@mcp.tool()
+async def check_health() -> str:
+    """
+    Checks the health status of the Cube.js server.
+    """
+    # readyz is usually at the root, not under /v1 base path
+    # We need to adjust the URL construction for this specific call
+    base_url_parts = CUBEJS_API_BASE_URL.split("/cubejs-api")
+    root_url = base_url_parts[0] if base_url_parts else "http://localhost:4000"
+    
+    url = f"{root_url.rstrip('/')}/readyz"
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(url, timeout=5.0)
+            if response.status_code == 200:
+                return "OK"
+            return f"Unhealthy: {response.status_code}"
+        except Exception as e:
+            return f"Unreachable: {str(e)}"
+
+@mcp.resource("cube://meta")
+async def get_meta_resource() -> str:
+    """
+    A resource that provides the full metadata of the Cube.js schema.
+    """
+    data = await make_request("GET", "meta")
+    return json.dumps(data, indent=2)
+
+def main():
+    mcp.run()
+
+if __name__ == "__main__":
+    main()
