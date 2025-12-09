@@ -5,6 +5,7 @@
             "args": [
                 "--with",
                 "cubejs-mcp-server @ git+https://github.com/zsembek/Cube.js-MCP-server.git",
+                "--",
                 "cubejs-mcp"
             ],
             "env": {
