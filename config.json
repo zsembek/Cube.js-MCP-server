@@ -6,7 +6,9 @@
                 "--with",
                 "cubejs-mcp-server @ git+https://github.com/zsembek/Cube.js-MCP-server.git",
                 "--",
-                "cubejs-mcp"
+                "python",
+                "-m",
+                "cubejs_mcp.server"
             ],
             "env": {
                 "CUBEJS_API_BASE_URL": "http://localhost:4000/cubejs-api/v1",
