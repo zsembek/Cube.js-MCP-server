@@ -1,6 +1,7 @@
 import os
 import httpx
 from fastmcp import FastMCP, Context
+from mcp.types import TextContent
 from typing import Optional, Dict, Any, List
 import json
 
@@ -45,16 +46,16 @@ async def make_request(method: str, endpoint: str, params: Optional[Dict] = None
             raise RuntimeError(f"Request failed: {str(e)}")
 
 @mcp.tool()
-async def list_cubes() -> str:
+async def list_cubes() -> TextContent:
     """
     Retrieves the list of available cubes, including their measures, dimensions, and segments.
     Returns the full metadata object from Cube.js.
     """
     result = await make_request("GET", "meta")
-    return json.dumps(result)
+    return TextContent(type="text", text=json.dumps(result))
 
 @mcp.tool()
-async def execute_query(query: Dict[str, Any]) -> str:
+async def execute_query(query: Dict[str, Any]) -> TextContent:
     """
     Executes a query against the Cube.js API and returns the results.
     
@@ -71,10 +72,10 @@ async def execute_query(query: Dict[str, Any]) -> str:
                }
     """
     result = await make_request("GET", "load", params={"query": json.dumps(query)})
-    return json.dumps(result) 
+    return TextContent(type="text", text=json.dumps(result)) 
 
 @mcp.tool()
-async def execute_query_post(query: Dict[str, Any]) -> str:
+async def execute_query_post(query: Dict[str, Any]) -> TextContent:
     """
     Executes a query against the Cube.js API using POST method (recommended for complex queries).
     
@@ -82,10 +83,10 @@ async def execute_query_post(query: Dict[str, Any]) -> str:
         query: The Cube.js query object.
     """
     result = await make_request("POST", "load", json_data={"query": query})
-    return json.dumps(result)
+    return TextContent(type="text", text=json.dumps(result))
 
 @mcp.tool()
-async def get_sql(query: Dict[str, Any]) -> str:
+async def get_sql(query: Dict[str, Any]) -> TextContent:
     """
     Returns the generated SQL for a given query without executing it.
     
@@ -93,7 +94,7 @@ async def get_sql(query: Dict[str, Any]) -> str:
         query: The Cube.js query object.
     """
     result = await make_request("GET", "sql", params={"query": json.dumps(query)})
-    return json.dumps(result)
+    return TextContent(type="text", text=json.dumps(result))
 
 @mcp.tool()
 async def check_health() -> str:
