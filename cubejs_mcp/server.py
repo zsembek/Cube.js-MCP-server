@@ -45,55 +45,35 @@ async def make_request(method: str, endpoint: str, params: Optional[Dict] = None
             raise RuntimeError(f"Request failed: {str(e)}")
 
 @mcp.tool()
-async def list_cubes() -> Dict[str, Any]:
+async def list_cubes() -> str:
     """
     Retrieves the list of available cubes, including their measures, dimensions, and segments.
     Returns the full metadata object from Cube.js.
     """
-    return await make_request("GET", "meta")
+    result = await make_request("GET", "meta")
+    return json.dumps(result)
 
 @mcp.tool()
-async def execute_query(query: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Executes a query against the Cube.js API and returns the results.
-    
-    Args:
-        query: The Cube.js query object (JSON). Example:
-               {
-                 "measures": ["Stories.count"],
-                 "dimensions": ["Stories.category"],
-                 "timeDimensions": [{
-                   "dimension": "Stories.time",
-                   "dateRange": ["2015-01-01", "2015-12-31"],
-                   "granularity": "month"
-                 }]
-               }
-    """
-    return await make_request("GET", "load", params={"query": json.dumps(query)}) 
-    # Note: complex queries might need POST /load if too long, but GET is standard for simple ones.
-    # Ideally we should use POST for safety with large JSONs.
-    # Let's switch to POST /load which is supported and safer for JSON payloads.
-    # return await make_request("POST", "load", json_data={"query": query})
-
-@mcp.tool()
-async def execute_query_post(query: Dict[str, Any]) -> Dict[str, Any]:
+async def execute_query_post(query: Dict[str, Any]) -> str:
     """
     Executes a query against the Cube.js API using POST method (recommended for complex queries).
     
     Args:
         query: The Cube.js query object.
     """
-    return await make_request("POST", "load", json_data={"query": query})
+    result = await make_request("POST", "load", json_data={"query": query})
+    return json.dumps(result)
 
 @mcp.tool()
-async def get_sql(query: Dict[str, Any]) -> Dict[str, Any]:
+async def get_sql(query: Dict[str, Any]) -> str:
     """
     Returns the generated SQL for a given query without executing it.
     
     Args:
         query: The Cube.js query object.
     """
-    return await make_request("GET", "sql", params={"query": json.dumps(query)})
+    result = await make_request("GET", "sql", params={"query": json.dumps(query)})
+    return json.dumps(result)
 
 @mcp.tool()
 async def check_health() -> str:
