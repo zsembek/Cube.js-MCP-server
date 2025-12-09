@@ -67,7 +67,11 @@ To use this MCP server with Claude or other compatible clients, add it to your c
         "cubejs": {
             "command": "uvx",
             "args": [
-                "git+https://github.com/YOUR_USERNAME/cubejs-mcp-server.git"
+                "--with",
+                "cubejs-mcp-server @ git+https://github.com/zsembek/Cube.js-MCP-server.git",
+                "python",
+                "-m",
+                "cubejs_mcp.server"
             ],
             "env": {
                 "CUBEJS_API_BASE_URL": "http://localhost:4000/cubejs-api/v1",
@@ -129,8 +133,12 @@ result = await query_cube(
 
 ```
 .
-├── server.py              # Main MCP server implementation
+├── cubejs_mcp/
+│   ├── __init__.py        # Package initialization
+│   └── server.py          # MCP server implementation
+├── server.py              # Legacy entry point (kept for compatibility)
 ├── config.json            # Configuration file for MCP clients
+├── pyproject.toml         # Python package configuration
 ├── requirements.txt       # Python dependencies
 ├── .env.example          # Environment variables template
 └── README.md             # This file
